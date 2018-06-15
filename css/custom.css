@@ -1,6 +1,10 @@
 img.custom-img {
-    border: none !important;
-    padding: 5px;
-    background: none !important;
-    box-shadow: none !important;
+  border: none !important;
+  padding: 5px;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.reveal pre {
+  box-shadow: none;
 }

@@ -27,12 +27,427 @@
 <body>
 	<div class="reveal">
 		<div class="slides">
-			<section data-markdown="slides.md" />
+			<section>
+				<h1>React + Typescript</h1>
+				<h4>The good, the bad and ("the ugly" as `string`)</h4>
+				<div>
+					<img class="custom-img" height="200" src="./react.png" />
+					<img class="custom-img" height="200" src="./ts.png" />
+				</div>
+			</section>
+			<section>
+				<h3>Yvan Guidoin Full-Stack Developer at
+					<a href="https://ajenta.net" target="_blank" rel="noopener noreferrer">Ajenta</a>
+				</h3>
+				<div>
+					<img class="custom-img" height="60" src="./ajenta.png" />
+					<img class="custom-img" height="60" src="./vscene.png" />
+				</div>
+			</section>
+			<section>
+				<h3>Why Typescript ?</h3>
+				<ul>
+					<li>Code consistency</li>
+					<li>At compilation time props checking</li>
+					<li>Avoid some testing</li>
+					<li>Tooling</li>
+				</ul>
+			</section>
+			<section data-markdown>
+				<textarea data-template>
+					### Tooling
+					- [typescriptlang.org - integrating with build tools](https://www.typescriptlang.org/docs/handbook/integrating-with-build-tools.html)
+					- [VSCode](https://code.visualstudio.com/)
+					- [atom-typescript](https://atom.io/packages/atom-typescript)
+					- [Prettier](https://prettier.io)
+					- [ts-jest](https://github.com/kulshekhar/ts-jest)
+				</textarea>
+			</section>
+			<section>
+				<h2>Let's do some rework</h2>
+			</section>
+			<section>
+				<h2>The good</h2>
+			</section>
+			<section>
+				<p>Dumb pure component</p>
+				<pre>
+					<code class="language-javascript" data-trim>
+						import React from "react";
+						import PropTypes from "prop-types";
+						function FullScreenLoader(props) {
+							return (
+							<div className="fullscreen-loader">
+								<div className="wrap">
+								<div className="message">{props.message}</div>
+								<div className="dots"/>
+								</div>
+							</div>
+							);
+						};
+						FullScreenLoader.propTypes = {
+							message: PropTypes.string.isRequired,
+						};
+						export default FullScreenLoader;
+					</code>
+				</pre>
+			</section>
+			<section>
+				<pre>
+					<code class="language-javascript" data-trim>
+						import React from "react";
+						import PropTypes from "prop-types";
+						function FullScreenLoader(props) { /* render */ };
+						FullScreenLoader.propTypes = {
+						message: PropTypes.string.isRequired,
+						};
+						export default FullScreenLoader;
+					</code>
+				</pre>
+				<pre class="fragment">
+					<code class="language-typescript" data-trim>
+						import React from "react";
+						export interface FullScreenLoaderProps {
+							message: string;
+						}
+						function FullScreenLoader(props: FullScreenLoaderProps) { /* render */ };
+						export default FullScreenLoader;
+					</code>
+				</pre>
+				<p class="fragment">
+					<video data-autoplay loop muted src="https://media.giphy.com/media/udmx3pgdiD7tm/giphy.mp4" />
+				</p>
+			</section>
+			<section>
+				<h2>The bad</h2>
+				<p class="fragment">
+					<video data-autoplay loop muted src="https://media.giphy.com/media/10PYbG30MLMqf6/giphy.mp4" />
+				</p>
+			</section>
+			<section>
+				<h3>Redux connected component</h3>
+				<pre class="fragment">
+					<code class="language-javascript" data-trim style="font-size: 0.9rem; line-height: 0.9rem; max-height: 600px;">
+							import React from "react";
+							import PropTypes from "prop-types";
+							import { connect } from "react-redux";
+							import { login } from "../redux/actions";			
+							class Login extends React.Component {
+							  	constructor(props) {
+									super(props);
+									this.state = { email: "", password: "" };
+									this.submitLogin = this.submitLogin.bind(this);
+							  	}
+								submitLogin(e) {
+									e.preventDefault();
+									this.props.login(this.state.email, this.state.password);
+								}
+								render() {
+									const { from } = this.props.location.state || { from: { pathname: "/" } };
+									if (this.props.authenticated) {
+										// return ...
+									} else // return ...;
+								}
+							}							
+							Login.propTypes = {
+								authenticated: PropTypes.bool.isRequired,
+								login: PropTypes.func.isRequired,
+								location: PropTypes.object,
+								change: PropTypes.number,
+								error: PropTypes.string,
+							};							
+							const mapStateToProps = ({ authentication }) => ({
+								authenticated: authentication.authenticated,
+								change: authentication.change,
+								error: authentication.error,
+							});
+							const mapDispatchToProps = dispatch => ({
+								login: (e, p) => dispatch(login(e, p)),
+							});	
+							export default connect(mapStateToProps, mapDispatchToProps)(Login);
+					</code>
+				</pre>
+			</section>
+			<section>
+				<h3>Actions</h3>
+				<pre>
+					<code class="language-javascript" data-trim style="font-size: 0.9rem; line-height: 0.8rem;">
+						export function login(email, pwd) {
+							return {
+								type: actions.LOGIN,
+								email,
+								pwd,
+								status: ActionStatus.OPEN,
+							};
+						}
+					</code>
+				</pre>
+				<pre class="fragment">
+					<code class="language-typescript" data-trim style="font-size: 0.9rem; line-height: 0.9rem;">
+							export enum actions {
+								LOGIN = "Auth/Login",
+								...
+							}  							  
+							export interface LoginAction {
+								type: actions.LOGIN;
+								email: string;
+								pwd: string;
+								status: ActionStatus;
+								token?: string;
+							}
+							export const login = (email: string, pwd: string): LoginAction => ({
+								type: actions.LOGIN,
+								status: ActionStatus.OPEN,
+								email,
+								pwd,
+							});
+					</code>
+				</pre>
+			</section>
+			<section>
+				<h3>Reducers</h3>
+				<pre>
+					<code class="language-javascript" data-trim style="font-size: 0.9rem; line-height: 0.9rem;">
+							const initialState = { authenticated: false, token: "" };
+
+							function authentication(state = initialState, action) {
+								switch (action.type) {
+									case actions.LOGIN:
+										switch (action.status) {
+											case ActionStatus.SUCCESS:
+												return {
+													...state,
+													token: action.token,
+													authenticated: true,
+												};
+										default: return state;
+										}
+									default: return state;
+								}
+							}
+					</code>
+				</pre>
+				<pre class="fragment">
+					<code class="language-typescript" data-trim style="font-size: 0.9rem; line-height: 0.9rem;">
+						export interface AuthStore {
+							authenticated: boolean;
+							token: string;
+						}
+						export interface RootStoreType {
+							authentication: AuthStore;
+						}
+						const initialState: AuthStore = { authenticated: false, token: "" };
+
+						function authentication(state: AuthStore = initialState, action: AuthActions): AuthStore {
+							switch (action.type) {
+								case actions.LOGIN:
+									switch (action.status) {
+										case ActionStatus.SUCCESS:
+											return {
+												...state,
+												token: action.token,
+												authenticated: true,
+											};
+										default: return state;
+									}
+								default: return state;
+							}
+						}
+					</code>
+				</pre>
+			</section>
+			<section>
+				<h3>Component in itself</h3>
+				<pre>
+					<code class="language-typescript" data-trim style="font-size: 0.9rem; line-height: 0.9rem; max-height: 800px;">
+							import React from "react";
+							import { connect, Dispatch } from "react-redux";
+							import { login } from "../redux/actions";
+							import { Location } from "history";
+														
+							export interface LoginProps {
+								authenticated: boolean;
+								login: typeof login;
+								location: Location;
+							}
+							
+							class Login extends React.Component&lt;LoginProps&gt; {
+								state: {
+									email: string;
+									password: string;
+								};
+								constructor(props) {
+									super(props);
+									this.state = { email: "", password: "" };
+									this.submitLogin = this.submitLogin.bind(this);
+								}
+								
+								private submitLogin(e: React.FormEvent&lt;HTMLFormElement&gt;) {
+									e.preventDefault();
+									this.props.login(this.state.email, this.state.password);
+								}
+							
+								render() {
+									const { from } = this.props.location.state || { from: { pathname: "/" } };
+									if (this.props.authenticated) {
+										// return ...
+									} else // return ...;
+								}
+							}
+							
+							const mapStateToProps = ({ authentication }: RootStoreType) => ({
+								authenticated: authentication.authenticated,
+							});
+							const mapDispatchToProps = (dispatch: Dispatch) => ({
+								login: (e, p) => dispatch(login(e, p)),
+							});
+							export default connect(mapStateToProps, mapDispatchToProps)(Login);
+					</code>
+				</pre>
+			</section>
+			<section>
+				<h3>Done!</h3>
+				<p class="fragment">
+					<video data-autoplay loop muted src="https://media.giphy.com/media/111ebonMs90YLu/giphy.mp4" />
+				</p>
+			</section>
+			<section>
+				<h2>The ugly</h2>
+				<h4 class="fragment">Explanations</h4>
+			</section>
+			<section>
+				<video class="stretch" data-autoplay loop muted src="./ugly.mp4" />
+			</section>
+			<section>
+				<h3>I feel tired already</h3>
+				<pre>
+					<code class="language-javascript" data-trim style="font-size: 0.9rem; line-height: 0.9rem; max-height: 800px;">
+						const CreationSidebar = props => {
+							return (
+								&lt;div className="sidebar"&gt;
+									&lt;div className="guests"&gt;
+									&lt;p className="heading"&gt;{`${!props.disabled ? "ADD " : ""} GUESTS`}&lt;/p&gt;
+									&lt;Dropdown
+										identifier="g"
+										addedData={props.addedData.guests}
+										addedDialOutData={[]}
+										ignoreDuplicates={[...props.addedData.moderators, ...props.addedData.lecturers]}
+										addItem={props.addGuest}
+										removeItem={props.removeGuest}
+										removeBulk={props.removeBulk}
+										searchedKey="fullName"
+										storeCollection="people"
+										avatars={true}
+										organiserId={props.organiserId}
+										disabled={props.disabled}
+										emailInvitations={props.emailInvitations}
+										placeholder={props.emailInvitations ? "Search contacts or invite by email" : "Search contacts"}
+										/&gt;
+									&lt;/div&gt;
+									//... same component with others parameters 3 more times
+								&lt;/div>
+							)
+						}
+
+						CreationSidebar.propTypes = {
+							organiserId: PropTypes.number,
+							dropdowns: PropTypes.array,
+							addGuest: PropTypes.func.isRequired,
+							addModerator: PropTypes.func.isRequired,
+							addLecturer: PropTypes.func,
+							addRoomsystem: PropTypes.func,
+							removeGuest: PropTypes.func.isRequired,
+							removeModerator: PropTypes.func.isRequired,
+							removeLecturer: PropTypes.func,
+							removeRoomsystem: PropTypes.func,
+							removeBulk: PropTypes.func,
+							addedData: PropTypes.object.isRequired,
+							addedDialOutData: PropTypes.array.isRequired,
+							emailInvitations: PropTypes.bool.isRequired,
+							disabled: PropTypes.bool.isRequired,
+							setDialOutId: PropTypes.func,
+						};
+					</code>
+				</pre>
+			</section>
+			<section>
+				<h3>The real issue</h3>
+				<pre class="fragment">
+					<code class="language-javascript" data-trim>
+						// in the Dropdown component
+						const mapStateToProps = (store, ownProps) => {
+							return {
+								isFetching: store.people.isFetching,
+								data: store[ownProps.storeCollection],    //   &lt;----  THIS LINE
+								ownId: store.profile.id,
+								orgs: store.organisation.organisationsById,
+							};
+						};							  
+						export default connect(mapStateToProps)(Dropdown); 
+					</code>
+				</pre>
+				<p class="fragment">What's the type of the
+					<b>data</b> props ?</p>
+			</section>
+			<section>
+				<p>What's the solution ?</p>
+				<pre class="fragment"><code data-trim>git blame | git murder</code></pre>
+				<pre class="fragment">
+					<code class="language-typescript" data-trim>
+						export interface Dropdown {
+							data: Array&lt;any&gt;;
+						}
+					</code>
+				</pre>
+				<pre class="fragment">
+					<code class="language-typescript" data-trim>
+						export interface Dropdown {
+							data: Array&lt;People&gt; | Array&lt;Room&gt; | Array&lt;Emails&gt; | Array&lt;Banana&gt;;
+						}
+						// and in the component
+						if(this.props.storeCollection === "bananacollection")
+							return (this.props.data as Array&lt;Banana&gt;).map(this.renderBanana);
+					</code>
+				</pre>
+				<p class="fragment">Or maybe we were wrong from the beginning ?</p>
+				<p class="fragment">
+					<video style="position: absolute; top: 0;bottom: 0;right: 0;left: 0;margin: auto;" data-autoplay loop muted src="https://media.giphy.com/media/1L5YuA6wpKkNO/giphy.mp4"
+					/>
+				</p>
+			</section>
+			<section>
+				<p>If you can't define the behavior or the type of something clearly,</p>
+				<p class="fragment">the problem may not be Typescript</p>
+				<p class="fragment">It just reveals the flaws in your code.</p>
+			</section>
+			<section>
+				<h3>Pros and cons of moving to Typescript</h3>
+				<p class="fragment">
+					<b>+</b> Easier to understand how something you have not coded works</p>
+				<p class="fragment">
+					<b>+</b> Impact of changes is clear, no more
+					<code style="color: red; font-size: 0.7em;">TypeError: banana is undefined</code>
+				</p>
+				<p class="fragment">
+					<b>-</b> Moving to Typescript is not just writing a bunch of type declaration files
+				</p>
+				<p class="fragment">
+					<b>+</b> An opportunity to step back and think about how you're writing code
+				</p>
+			</section>
+			<section>
+				<p>
+					GitHub Repo for the
+					<b>@types</b> npm namespace:
+					<a href="https://github.com/DefinitelyTyped/DefinitelyTyped" target="_blank" rel="noopener noreferrer">DefinitelyTyped</a>
+				</p>
+				<p>Types for NodeJS / React / React-Router / Redux and a lot more (more than 4500 packages are typed there already)</p>
+			</section>
 		</div>
 	</div>
 
-	<script src="lib/js/head.min.js"></script>
-	<script src="js/reveal.js"></script>
+	<script src="lib/js/head.min.js "></script>
+	<script src="js/reveal.js "></script>
 
 	<script>
 		// More info about config & dependencies:
@@ -43,10 +458,10 @@
 				{ src: 'plugin/markdown/marked.js' },
 				{ src: 'plugin/markdown/markdown.js' },
 				{ src: 'plugin/notes/notes.js', async: true },
-				{ src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } }
+				{ src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); hljs.configure({ languages: ["typescript", "javascript"] }) } }
 			],
 			width: 1280,
-			height: 720,
+			height: 900,
 			margin: 0.05,
 			minScale: 0.1,
 			maxScale: 1,
